@@ -1,9 +1,10 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import Button from '@mui/material/Button';
 import TextField from '@mui/material/TextField';
 import Grid from '@mui/material/Grid';
 import Box from '@mui/material/Box';
 import Container from '@mui/material/Container';
+import { useNavigate } from 'react-router-dom';
 import { createTheme, ThemeProvider } from '@mui/material/styles';
 import Dialog from './Dialog';
 
@@ -13,20 +14,32 @@ export default function Login() {
 
     const [usernameValid, setUsernameValid] = useState(true);
     const [passwordValid, setPasswordValid] = useState(true);
-    const [dialog, setDialog] = useState(null);
+    const [openDialog, setOpenDialog] = useState(false);
+    const navigate = useNavigate();
 
-    const loginUser = async (formData) => {
+    const storeToken = (token) => {
+        sessionStorage.setItem("token", token);
+    }
+
+    const loginUser = (formData) => {
         if (!usernameValid || !passwordValid) {
             return;
         }
 
         if (formData.get('username') === 'foo' && formData.get('password') === 'bar') {
-            // navigate.push('/home');
+            storeToken("loggedIn");
+            navigate('/home');
         }
         else {
-            setDialog(<Dialog title={"Incorrect username or password"} msg={""}></Dialog>);
+            setOpenDialog(true);
         }
     }
+
+    const closeDialog = () => {
+        setOpenDialog(false);
+    }
+
+    useEffect(() => {}, [openDialog] );
 
     const usernameHandle = (event) => {
       setUsernameValid(event.currentTarget.value.match(/^[a-z0-9]+$/i) ? true : false);
@@ -38,13 +51,12 @@ export default function Login() {
 
     const handleSubmit = (event) => {
         event.preventDefault();
-        setDialog(null);
         loginUser(new FormData(event.currentTarget));        
     };
 
     return (
         <>
-            {dialog}
+            <Dialog open={openDialog} closeDialog={closeDialog} title={"Incorrect username or password"} />
             <ThemeProvider theme={theme}>
                 <Container component="main" maxWidth="xs">
                     <Box
@@ -66,7 +78,7 @@ export default function Login() {
                                     label="Username"
                                     name="username"
                                     autoComplete="username"
-                                    helperText={"Only characters and numbers"}
+                                    helperText={"Only numbers, alphabets"}
                                     onChange={usernameHandle}
                                     error={!usernameValid}
                                     />
@@ -80,7 +92,7 @@ export default function Login() {
                                     id="password"
                                     type="password"
                                     aria-label="empty password"
-                                    helperText={"only numbers, alphabets"}
+                                    helperText={"Only numbers, alphabets"}
                                     onChange={passwordHandle}
                                     error={!passwordValid}
                                     />
